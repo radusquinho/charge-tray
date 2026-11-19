@@ -46,6 +46,8 @@ namespace ChargeTray
                 if (device == null || device.ConnectionStatus != BluetoothConnectionStatus.Connected)
                     return list;
 
+                var appearance = device.Appearance;
+                var kind = BatteryReading.Classify(appearance == null ? (ushort)0 : appearance.RawValue, info.Name);
                 var services = await device.GetGattServicesForUuidAsync(BatteryService, BluetoothCacheMode.Cached).AsTask(token);
                 if (services.Status != GattCommunicationStatus.Success)
                     return list;
@@ -70,7 +72,7 @@ namespace ChargeTray
                             {
                                 var percent = reader.ReadByte();
                                 if (percent <= 100)
-                                    list.Add(new BatteryReading(info.Id + "|" + characteristic.AttributeHandle, info.Name, percent));
+                                    list.Add(new BatteryReading(info.Id + "|" + characteristic.AttributeHandle, info.Name, percent, kind));
                             }
                         }
                     }
@@ -84,7 +86,7 @@ namespace ChargeTray
 
             if (list.Count > 1)
                 for (var index = 0; index < list.Count; index++)
-                    list[index] = new BatteryReading(list[index].Id, info.Name + " (" + (index + 1) + ")", list[index].Percent);
+                    list[index] = new BatteryReading(list[index].Id, info.Name + " (" + (index + 1) + ")", list[index].Percent, kind: list[index].Kind);
             return list;
         }
     }

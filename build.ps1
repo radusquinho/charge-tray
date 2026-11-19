@@ -1,6 +1,7 @@
 [CmdletBinding()]
 param(
-    [string] $WindowsMetadata
+    [string] $WindowsMetadata,
+    [string] $OutputDirectory = (Join-Path $PSScriptRoot 'dist')
 )
 
 $ErrorActionPreference = 'Stop'
@@ -23,8 +24,7 @@ if (-not $WindowsMetadata -or -not (Test-Path -LiteralPath $WindowsMetadata)) {
     throw 'Install the Windows 10 or 11 SDK, or provide -WindowsMetadata with the path to Windows.winmd.'
 }
 
-$output = Join-Path $PSScriptRoot 'dist'
-New-Item -ItemType Directory -Path $output -Force | Out-Null
+$output = (New-Item -ItemType Directory -Path $OutputDirectory -Force).FullName
 $exe = Join-Path $output 'ChargeTray.exe'
 $manifest = Join-Path $PSScriptRoot 'src\app.manifest'
 $sources = Get-ChildItem -LiteralPath (Join-Path $PSScriptRoot 'src') -Filter '*.cs' -File |

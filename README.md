@@ -6,7 +6,7 @@ See the battery level of a wireless mouse or another compatible peripheral next 
 
 Download **ChargeTray.exe** from the [latest release](https://github.com/radusquinho/charge-tray/releases/latest) and run it on Windows 10 (1809 or newer) or Windows 11, x64, with .NET Framework 4.8. The portable executable requires no installation or administrator access. If Windows puts it in the hidden icons area, open **^** next to the clock and drag Charge Tray beside the clock.
 
-- The number on the icon is the selected device's percentage. Hover for its name and exact percentage.
+- The tray shows a device symbol next to its percentage. Mouse, headphones, keyboard and controller each have their own symbol. Hover for the device name.
 - Click to see the other readings, switch devices, refresh now, or quit. The app refreshes once a minute.
 - The menu follows your Windows language in Spanish or English.
 - Device readings stay on your PC. The app makes no internet requests and starts when you open it.

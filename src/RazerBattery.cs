@@ -40,7 +40,7 @@ namespace ChargeTray
                         continue;
                     var percent = Query(handle, reportSize, log);
                     if (percent.HasValue)
-                        yield return new BatteryReading(path, "Razer Viper V3 HyperSpeed", percent.Value);
+                        yield return new BatteryReading(path, "Razer Viper V3 HyperSpeed", percent.Value, DeviceKind.Mouse);
                 }
             }
         }

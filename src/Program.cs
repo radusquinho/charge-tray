@@ -2,11 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
-using System.Drawing.Drawing2D;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -58,6 +56,8 @@ namespace ChargeTray
         private string selectedId;
         private Icon icon;
         private int? displayedPercent;
+        private DeviceKind displayedKind;
+        private bool displayedLightTheme;
         private bool busy;
         private bool disposed;
         private bool failed;
@@ -171,12 +171,16 @@ namespace ChargeTray
             int? percent = selected == null ? (int?)null : selected.Percent;
             string label = selected == null ? "Charge Tray" : selected.Name + " · " + percent + "%";
             tray.Text = label.Length <= 63 ? label : label.Substring(0, 57) + "… " + percent + "%";
-            if (icon != null && percent == displayedPercent)
+            var kind = selected == null ? DeviceKind.Other : selected.Kind;
+            var lightTheme = TrayArtwork.UsesLightTheme();
+            if (icon != null && percent == displayedPercent && kind == displayedKind && lightTheme == displayedLightTheme)
                 return;
 
             var old = icon;
-            icon = TrayArtwork.Create(percent);
+            icon = TrayArtwork.Create(kind, percent, lightTheme);
             displayedPercent = percent;
+            displayedKind = kind;
+            displayedLightTheme = lightTheme;
             tray.Icon = icon;
             if (old != null)
                 old.Dispose();
@@ -199,58 +203,4 @@ namespace ChargeTray
         }
     }
 
-    internal static class TrayArtwork
-    {
-        private static readonly string[] Digits =
-        {
-            "111101101101111", "010110010010111", "111001111100111", "111001111001111",
-            "101101111001001", "111100111001111", "111100111101111", "111001010010010",
-            "111101111101111", "111101111001111"
-        };
-
-        public static Icon Create(int? percent)
-        {
-            using (var bitmap = new Bitmap(32, 32))
-            using (var graphics = Graphics.FromImage(bitmap))
-            using (var tile = new SolidBrush(percent <= 15 ? Color.FromArgb(158, 37, 56) :
-                percent <= 30 ? Color.FromArgb(141, 77, 8) : Color.FromArgb(15, 92, 82)))
-            {
-                graphics.ScaleTransform(2, 2);
-                graphics.SmoothingMode = SmoothingMode.None;
-                graphics.FillRectangle(tile, 1, 2, 14, 12);
-                graphics.FillRectangle(tile, 2, 1, 12, 14);
-                if (!percent.HasValue)
-                {
-                    graphics.FillRectangle(Brushes.White, 4, 5, 8, 6);
-                    graphics.FillRectangle(Brushes.White, 12, 7, 1, 2);
-                    graphics.FillRectangle(tile, 5, 6, 6, 4);
-                }
-                else
-                {
-                    var value = percent.Value.ToString(CultureInfo.InvariantCulture);
-                    var x = (16 - (value.Length * 4 - 1)) / 2;
-                    foreach (char digit in value)
-                    {
-                        var pixels = Digits[digit - '0'];
-                        for (var pixel = 0; pixel < pixels.Length; pixel++)
-                            if (pixels[pixel] == '1')
-                                graphics.FillRectangle(Brushes.White, x + pixel % 3, 5 + pixel / 3, 1, 1);
-                        x += 4;
-                    }
-                    graphics.FillRectangle(Brushes.White, 4, 11, 8, 1);
-                    graphics.FillRectangle(tile, 4 + (percent.Value * 8 + 99) / 100, 11, 8 - (percent.Value * 8 + 99) / 100, 1);
-                }
-                var handle = bitmap.GetHicon();
-                try
-                {
-                    using (var borrowedIcon = Icon.FromHandle(handle))
-                        return (Icon)borrowedIcon.Clone();
-                }
-                finally { DestroyIcon(handle); }
-            }
-        }
-
-        [DllImport("user32.dll")]
-        private static extern bool DestroyIcon(IntPtr icon);
-    }
 }
